@@ -31,7 +31,6 @@ import androidx.wear.compose.material.TimeText
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.example.mahjongquizapp.presentation.theme.MahjongQuizAppTheme
 
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -71,6 +70,7 @@ fun WearApp() {
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Bottom
             ) {
+                // FIXME: 本当は音声入力にしたいので、その繋ぎとしてリストから選択できるようにする...
                 ScalingLazyColumn(modifier = Modifier.fillMaxWidth()) {
                     item { ListHeader { Question(
                         isParent,
@@ -80,7 +80,16 @@ fun WearApp() {
                     ) } }
                     items(selectableItems.size) { index ->
                         Chip(
-                            onClick = {},
+                            onClick = {
+                                callAnswerApi(
+                                    isParent,
+                                    symbolCount,
+                                    fanCount,
+                                    isDraw,
+                                    payForStartPlayer = selectableItems[index].payForStartPlayer,
+                                    payForOther = selectableItems[index].payForOther
+                                )
+                            },
                             label = { Text(selectableItems[index].label) },
                             colors = ChipDefaults.secondaryChipColors()
                         )
@@ -218,6 +227,17 @@ fun getSelectableItems(
             )
         }
     }
+}
+
+fun callAnswerApi(
+    isParent: Boolean,
+    symbolCount: Int,
+    fanCount: Int,
+    isDraw: Boolean,
+    payForStartPlayer: Int,
+    payForOther: Int
+) {
+    // TODO: 実装
 }
 
 @Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
