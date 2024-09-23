@@ -6,7 +6,9 @@
 
 package com.example.mahjongquizapp.presentation
 
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -29,7 +31,13 @@ import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import androidx.wear.tooling.preview.devices.WearDevices
+import com.android.volley.Request
+import com.android.volley.RequestQueue
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.Volley
 import com.example.mahjongquizapp.presentation.theme.MahjongQuizAppTheme
+import org.json.JSONObject
+import com.example.mahjongquizapp.BuildConfig
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,14 +47,16 @@ class MainActivity : ComponentActivity() {
 
         setTheme(android.R.style.Theme_DeviceDefault)
 
+        val context = this
+
         setContent {
-            WearApp()
+            WearApp(context)
         }
     }
 }
 
 @Composable
-fun WearApp() {
+fun WearApp(context: Context?) {
     val isParent = (0..1).random() == 1
     val symbolCount = (2..11).random() * 10
     val fanCount = (1..13).random()
@@ -81,14 +91,17 @@ fun WearApp() {
                     items(selectableItems.size) { index ->
                         Chip(
                             onClick = {
-                                callAnswerApi(
-                                    isParent,
-                                    symbolCount,
-                                    fanCount,
-                                    isDraw,
-                                    payForStartPlayer = selectableItems[index].payForStartPlayer,
-                                    payForOther = selectableItems[index].payForOther
-                                )
+                                if (context !== null) {
+                                    callAnswerApi(
+                                        context,
+                                        isParent,
+                                        symbolCount,
+                                        fanCount,
+                                        isDraw,
+                                        payForStartPlayer = selectableItems[index].payForStartPlayer,
+                                        payForOther = selectableItems[index].payForOther
+                                    )
+                                }
                             },
                             label = { Text(selectableItems[index].label) },
                             colors = ChipDefaults.secondaryChipColors()
@@ -230,6 +243,7 @@ fun getSelectableItems(
 }
 
 fun callAnswerApi(
+    context: Context,
     isParent: Boolean,
     symbolCount: Int,
     fanCount: Int,
@@ -237,11 +251,40 @@ fun callAnswerApi(
     payForStartPlayer: Int,
     payForOther: Int
 ) {
-    // TODO: 実装
+    val url = BuildConfig.API_ROOT + "/scores/answer"
+    val requestQueue: RequestQueue = Volley.newRequestQueue(context)
+
+    val json = JSONObject()
+
+    val questionJson = JSONObject()
+    questionJson.put("isStartPlayer", isParent)
+    questionJson.put("isDraw", isDraw)
+    questionJson.put("symbolCount", symbolCount)
+    questionJson.put("fanCount", fanCount)
+
+    val scoreJson = JSONObject()
+    scoreJson.put("startPlayer", payForStartPlayer)
+    scoreJson.put("other", payForOther)
+
+    val answerJson = JSONObject()
+    answerJson.put("score", scoreJson)
+
+    json.put("question", questionJson)
+    json.put("answer", answerJson)
+
+    val request = JsonObjectRequest(
+        Request.Method.POST,
+        url,
+        json,
+        { _ -> Log.d("API_CALL", "success api！") },
+        { error -> Log.e("API_CALL", "Error: ${error.message}") }
+    )
+    requestQueue.add(request)
 }
+
 
 @Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable
 fun DefaultPreview() {
-    WearApp()
+    WearApp(null)
 }

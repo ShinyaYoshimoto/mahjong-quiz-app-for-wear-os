@@ -17,6 +17,8 @@ android {
             useSupportLibrary = true
         }
 
+        val apiRoot = project.findProperty("API_ROOT")
+        buildConfigField("String", "API_ROOT", "\"${apiRoot.toString()}\"")
     }
 
     buildTypes {
@@ -37,6 +39,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
