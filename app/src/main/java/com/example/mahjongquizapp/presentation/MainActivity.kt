@@ -184,27 +184,27 @@ class MainViewModel : ViewModel() {
         } else {
             if (isParent) {
                 arrayOf(
-                    SelectableItem("1500", 1500, 1500),
-                    SelectableItem("2000", 2000, 2000),
-                    SelectableItem("2400", 2400, 2400),
-                    SelectableItem("2900", 2900, 2900),
-                    SelectableItem("3400", 3400, 3400),
-                    SelectableItem("3900", 3900, 3900),
-                    SelectableItem("4400", 4400, 4400),
-                    SelectableItem("4800", 4800, 4800),
-                    SelectableItem("5300", 5300, 5300),
-                    SelectableItem("5800", 5800, 5800),
-                    SelectableItem("6800", 6800, 6800),
-                    SelectableItem("7200", 7200, 7200),
-                    SelectableItem("8700", 8700, 8700),
-                    SelectableItem("9600", 9600, 9600),
-                    SelectableItem("10600", 10600, 10600),
-                    SelectableItem("11600", 11600, 11600),
-                    SelectableItem("12000", 12000, 12000),
-                    SelectableItem("18000", 18000, 18000),
-                    SelectableItem("24000", 24000, 24000),
-                    SelectableItem("36000", 36000, 36000),
-                    SelectableItem("48000", 48000, 48000)
+                    SelectableItem("1500", 0, 1500),
+                    SelectableItem("2000", 0, 2000),
+                    SelectableItem("2400", 0, 2400),
+                    SelectableItem("2900", 0, 2900),
+                    SelectableItem("3400", 0, 3400),
+                    SelectableItem("3900", 0, 3900),
+                    SelectableItem("4400", 0, 4400),
+                    SelectableItem("4800", 0, 4800),
+                    SelectableItem("5300", 0, 5300),
+                    SelectableItem("5800", 0, 5800),
+                    SelectableItem("6800", 0, 6800),
+                    SelectableItem("7200", 0, 7200),
+                    SelectableItem("8700", 0, 8700),
+                    SelectableItem("9600", 0, 9600),
+                    SelectableItem("10600", 0, 10600),
+                    SelectableItem("11600", 0, 11600),
+                    SelectableItem("12000", 0, 12000),
+                    SelectableItem("18000", 0, 18000),
+                    SelectableItem("24000", 0, 24000),
+                    SelectableItem("36000", 0, 36000),
+                    SelectableItem("48000", 0, 48000)
                 )
             } else {
                 arrayOf(
