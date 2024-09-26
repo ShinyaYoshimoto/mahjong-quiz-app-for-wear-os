@@ -4,6 +4,14 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file(project.findProperty("SIGNING_CONFIGS_DEBUG_STORE_FILE").toString())
+            storePassword = project.findProperty("SIGNING_CONFIGS_DEBUG_STORE_PASSWORD").toString()
+            keyPassword = project.findProperty("SIGNING_CONFIGS_DEBUG_KEY_PASSWORD").toString()
+            keyAlias = project.findProperty("SIGNING_CONFIGS_DEBUG_KEY_ALIAS").toString()
+        }
+    }
     namespace = "com.example.mahjongquizapp"
     compileSdk = 34
 
@@ -28,6 +36,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
