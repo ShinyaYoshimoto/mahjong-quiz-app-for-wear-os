@@ -7,17 +7,23 @@
 package com.example.mahjongquizapp.presentation
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.speech.RecognizerIntent
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -26,15 +32,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
-import androidx.wear.compose.material.ListHeader
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
@@ -48,6 +55,7 @@ import org.json.JSONObject
 import com.example.mahjongquizapp.BuildConfig
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 class MainViewModel : ViewModel() {
     private val _apiResponse = MutableLiveData<Boolean?>()
@@ -108,7 +116,7 @@ class MainViewModel : ViewModel() {
             { response ->
                 _apiResponse.value = response.getBoolean("isCorrect")
                 viewModelScope.launch {
-                    delay(5000)
+                    delay(3000)
                     generateNewQuiz()
                     _apiResponse.value = null
                 }
@@ -117,7 +125,7 @@ class MainViewModel : ViewModel() {
                 Log.e("API_CALL", error.toString())
                 _apiResponse.value = false
                 viewModelScope.launch {
-                    delay(5000)
+                    delay(3000)
                     generateNewQuiz()
                     _apiResponse.value = null
                 }
@@ -238,6 +246,8 @@ class MainViewModel : ViewModel() {
 class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
 
+    private lateinit var speechRecognizerLauncher: ActivityResultLauncher<Intent>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
 
@@ -245,14 +255,70 @@ class MainActivity : ComponentActivity() {
 
         setTheme(android.R.style.Theme_DeviceDefault)
 
+        speechRecognizerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val results = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                val spokenText = results?.get(0) ?: "認識できませんでした"
+                val (startPlayerScore, otherPlayerScore) = parseScore(spokenText)
+                // 以下のルールに則り、変数startPlayerScore, otherPlayerScoreを定義する
+                // 1. 「xxxオール」は、Intキャストしたxxxの値
+                // 2. 「300500」（6桁以上の数値）は、半分に切った、前半と後半をそれぞれIntキャスト、
+                // 3. 「1000」は、Intキャストしたその値
+                // 4. それ以外の場合は、入力値が不正なので再度入力を促す
+                if (startPlayerScore != null && otherPlayerScore != null) {
+                    Log.d("aaa", "Start Player Score: $startPlayerScore, Other Player Score: $otherPlayerScore")
+
+                    mainViewModel.callAnswerApi(
+                        context = this,
+                        payForStartPlayer = startPlayerScore,
+                        payForOther = otherPlayerScore
+                    )
+                } else {
+                    Log.d("aaa", "入力値が不正です。再度入力してください。")
+                }
+            } else {
+//                Toast.makeText(this, "音声認識に失敗しました", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         setContent {
-            WearApp(mainViewModel)
+            WearApp(mainViewModel, speechRecognizerLauncher)
         }
     }
 }
 
+fun displaySpeechRecognizer(speechRecognizerLauncher: ActivityResultLauncher<Intent>) {
+    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+        putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.JAPAN.toString())
+    }
+    speechRecognizerLauncher.launch(intent)
+}
+fun parseScore(input: String): Pair<Int?, Int?> {
+    return when {
+        input.endsWith("オール") -> {
+            val score = input.removeSuffix("オール").toIntOrNull()
+            if (score != null) Pair(score, score) else Pair(null, null)
+        }
+        input.length >= 6 && input.all { it.isDigit() } -> {
+            val mid = input.length / 2
+            val otherPlayerScore = input.substring(0, mid).toIntOrNull()
+            val startPlayerScore = input.substring(mid).toIntOrNull()
+            if (startPlayerScore != null && otherPlayerScore != null) Pair(startPlayerScore, otherPlayerScore) else Pair(null, null)
+        }
+        input.length >= 3 && input.all { it.isDigit() } -> {
+            val score = input.toIntOrNull()
+            if (score != null) Pair(score, score) else Pair(null, null)
+        }
+        else -> Pair(null, null)
+    }
+}
+
 @Composable
-fun WearApp(mainViewModel: MainViewModel) {
+fun WearApp(
+    mainViewModel: MainViewModel,
+    speechRecognizerLauncher: ActivityResultLauncher<Intent>?
+) {
     val context = LocalContext.current
     val apiResponse by mainViewModel.apiResponse.observeAsState()
     val isParent by mainViewModel.isParent.observeAsState(false)
@@ -264,46 +330,60 @@ fun WearApp(mainViewModel: MainViewModel) {
     MahjongQuizAppTheme {
         Box(
             modifier = Modifier
-                .fillMaxSize()
                 .background(MaterialTheme.colors.background),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.TopCenter,
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
-            ) {
+            Column{
                 TimeText()
             }
             if (apiResponse == null) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Bottom
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    // 本当は音声入力にしたいので、その繋ぎとしてリストから選択できるようにする...
-                    ScalingLazyColumn(modifier = Modifier.fillMaxWidth()) {
-                        item {
-                            ListHeader {
-                                Question(
-                                    isParent,
-                                    symbolCount,
-                                    fanCount,
-                                    isDraw
+                    if (speechRecognizerLauncher !== null) {
+                        Question(
+                            isParent,
+                            symbolCount,
+                            fanCount,
+                            isDraw,
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Button(
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            onClick = {
+                                displaySpeechRecognizer(speechRecognizerLauncher)
+                            },
+                            content = {
+                                Text("答える")
+                            },
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    } else {
+                        ScalingLazyColumn(modifier = Modifier.fillMaxWidth()) {
+//                            item {
+//                                ListHeader {
+//                                    Question(
+//                                        isParent,
+//                                        symbolCount,
+//                                        fanCount,
+//                                        isDraw
+//                                    )
+//                                }
+//                            }
+                            items(selectableItems.size) { index ->
+                                Chip(
+                                    onClick = {
+                                        mainViewModel.callAnswerApi(
+                                            context,
+                                            payForStartPlayer = selectableItems[index].payForStartPlayer,
+                                            payForOther = selectableItems[index].payForOther
+                                        )
+                                    },
+                                    label = { Text(selectableItems[index].label) },
+                                    colors = ChipDefaults.secondaryChipColors()
                                 )
                             }
-                        }
-                        items(selectableItems.size) { index ->
-                            Chip(
-                                onClick = {
-                                    mainViewModel.callAnswerApi(
-                                        context,
-                                        payForStartPlayer = selectableItems[index].payForStartPlayer,
-                                        payForOther = selectableItems[index].payForOther
-                                    )
-                                },
-                                label = { Text(selectableItems[index].label) },
-                                colors = ChipDefaults.secondaryChipColors()
-                            )
                         }
                     }
                 }
@@ -347,5 +427,5 @@ data class SelectableItem (
 @Composable
 fun DefaultPreview() {
     val mainViewModel = MainViewModel()
-    WearApp(mainViewModel)
+    WearApp(mainViewModel, null)
 }
