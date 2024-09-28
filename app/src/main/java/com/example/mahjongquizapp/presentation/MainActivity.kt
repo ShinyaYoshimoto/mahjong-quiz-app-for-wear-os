@@ -42,6 +42,7 @@ import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
+import androidx.wear.compose.material.ListHeader
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
@@ -266,13 +267,36 @@ class MainActivity : ComponentActivity() {
                 // 3. 「1000」は、Intキャストしたその値
                 // 4. それ以外の場合は、入力値が不正なので再度入力を促す
                 if (startPlayerScore != null && otherPlayerScore != null) {
-                    Log.d("aaa", "Start Player Score: $startPlayerScore, Other Player Score: $otherPlayerScore")
+                    if (mainViewModel.isParent.value == true) {
+                        if (mainViewModel.isDraw.value == true) {
+                            mainViewModel.callAnswerApi(
+                                context = this,
+                                payForStartPlayer = 0,
+                                payForOther = otherPlayerScore
+                            )
+                        } else {
+                            mainViewModel.callAnswerApi(
+                                context = this,
+                                payForStartPlayer = 0,
+                                payForOther = otherPlayerScore
+                            )
+                        }
+                    } else {
+                        if (mainViewModel.isDraw.value == true) {
+                            mainViewModel.callAnswerApi(
+                                context = this,
+                                payForStartPlayer = startPlayerScore,
+                                payForOther = otherPlayerScore
+                            )
+                        } else {
+                            mainViewModel.callAnswerApi(
+                                context = this,
+                                payForStartPlayer = startPlayerScore,
+                                payForOther = otherPlayerScore
+                            )
+                        }
+                    }
 
-                    mainViewModel.callAnswerApi(
-                        context = this,
-                        payForStartPlayer = startPlayerScore,
-                        payForOther = otherPlayerScore
-                    )
                 } else {
                     Log.d("aaa", "入力値が不正です。再度入力してください。")
                 }
@@ -361,16 +385,16 @@ fun WearApp(
                         Spacer(modifier = Modifier.height(16.dp))
                     } else {
                         ScalingLazyColumn(modifier = Modifier.fillMaxWidth()) {
-//                            item {
-//                                ListHeader {
-//                                    Question(
-//                                        isParent,
-//                                        symbolCount,
-//                                        fanCount,
-//                                        isDraw
-//                                    )
-//                                }
-//                            }
+                            item {
+                                ListHeader {
+                                    Question(
+                                        isParent,
+                                        symbolCount,
+                                        fanCount,
+                                        isDraw
+                                    )
+                                }
+                            }
                             items(selectableItems.size) { index ->
                                 Chip(
                                     onClick = {
@@ -388,12 +412,17 @@ fun WearApp(
                     }
                 }
             } else {
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    color = if (apiResponse == true) MaterialTheme.colors.primary else MaterialTheme.colors.error,
-                    text = if (apiResponse == true) "正解！" else "不正解"
-                )
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        color = if (apiResponse == true) MaterialTheme.colors.primary else MaterialTheme.colors.error,
+                        text = if (apiResponse == true) "正解！" else "不正解"
+                    )
+                }
             }
         }
     }
