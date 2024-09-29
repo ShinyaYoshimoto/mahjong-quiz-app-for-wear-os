@@ -60,6 +60,12 @@ class MainViewModel : ViewModel() {
     private val _apiResponse = MutableLiveData<Boolean?>()
     val apiResponse: LiveData<Boolean?> = _apiResponse
 
+    private val _correctStartPlayerScore = MutableLiveData<Int>()
+    val correctStartPlayerScore: LiveData<Int> = _correctStartPlayerScore
+
+    private val _correctOtherPlayerScore = MutableLiveData<Int>()
+    val correctOtherPlayerScore: LiveData<Int> = _correctOtherPlayerScore
+
     private val _isParent = MutableLiveData<Boolean>()
     val isParent: LiveData<Boolean> = _isParent
 
@@ -81,10 +87,7 @@ class MainViewModel : ViewModel() {
 
     private fun generateNewQuiz() {
         val fanCount = generateRandomFanCount()
-        _isParent.value = (0..1).random() == 1
-        _isDraw.value = (0..1).random() == 1
-        _fanCount.value = fanCount
-        _symbolCount.value = if (fanCount == 1) {
+        val symbolCount = if (fanCount == 1) {
             (3..11).random() * 10
         } else {
             val lottery = (1..11).random()
@@ -95,7 +98,17 @@ class MainViewModel : ViewModel() {
                 lottery * 10
             }
         }
+        _isParent.value = (0..1).random() == 1
+        _isDraw.value = if (symbolCount == 20) {
+            true
+        } else {
+            (0..1).random() == 1
+        }
+        _fanCount.value = fanCount
+        _symbolCount.value = symbolCount
         _hasAnswer.value = false
+        _correctStartPlayerScore.value = 0
+        _correctOtherPlayerScore.value = 0
     }
 
     private fun generateRandomFanCount(): Int {
@@ -145,6 +158,8 @@ class MainViewModel : ViewModel() {
             Request.Method.POST, url, json,
             { response ->
                 _apiResponse.value = response.getBoolean("isCorrect")
+                _correctStartPlayerScore.value = response.getJSONObject("correctAnswer").getInt("startPlayer")
+                _correctOtherPlayerScore.value = response.getJSONObject("correctAnswer").getInt("other")
                 viewModelScope.launch {
                     delay(3000)
                     generateNewQuiz()
@@ -159,6 +174,7 @@ class MainViewModel : ViewModel() {
                     generateNewQuiz()
                     _apiResponse.value = null
                 }
+                throw error
             }
         )
 
@@ -315,13 +331,34 @@ fun WearApp(
                     verticalArrangement = Arrangement.Center
                 ) {
                     if (apiResponse != null) {
+                        val correctScore = if (mainViewModel.isParent.value == true) {
+                            if (mainViewModel.isDraw.value == true) {
+                                "${mainViewModel.correctOtherPlayerScore.value}オール"
+                            } else {
+                                "${mainViewModel.correctOtherPlayerScore.value}"
+                            }
+                        } else {
+                            if (mainViewModel.isDraw.value == true) {
+                                "${mainViewModel.correctOtherPlayerScore.value}${mainViewModel.correctStartPlayerScore.value}"
+                            } else {
+                                "${mainViewModel.correctOtherPlayerScore.value}"
+                            }
+                        }
                         Text(
                             fontSize = 32.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center,
                             color = if (apiResponse == true) MaterialTheme.colors.primary else MaterialTheme.colors.error,
-                            text = if (apiResponse == true) "Success！" else "False..."
+                            text = if (apiResponse == true) "Success!" else "False..."
+                        )
+                        Text(
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            color = if (apiResponse == true) MaterialTheme.colors.primary else MaterialTheme.colors.error,
+                            text = correctScore
                         )
                     }
                     else {
