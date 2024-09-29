@@ -80,10 +80,21 @@ class MainViewModel : ViewModel() {
     }
 
     private fun generateNewQuiz() {
+        val fanCount = generateRandomFanCount()
         _isParent.value = (0..1).random() == 1
-        _symbolCount.value = (2..11).random() * 10
-        _fanCount.value = generateRandomFanCount()
         _isDraw.value = (0..1).random() == 1
+        _fanCount.value = fanCount
+        _symbolCount.value = if (fanCount == 1) {
+            (3..11).random() * 10
+        } else {
+            val lottery = (1..11).random()
+            // 25符の扱いが面倒なので、1なら25符にしてしまう...
+            if (lottery == 1) {
+                25
+            } else {
+                lottery * 10
+            }
+        }
         _hasAnswer.value = false
     }
 
