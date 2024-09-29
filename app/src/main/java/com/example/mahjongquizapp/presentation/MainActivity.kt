@@ -72,6 +72,9 @@ class MainViewModel : ViewModel() {
     private val _isDraw = MutableLiveData<Boolean>()
     val isDraw: LiveData<Boolean> = _isDraw
 
+    private val _hasAnswer = MutableLiveData<Boolean>()
+    val hasAnswer: LiveData<Boolean> = _hasAnswer
+
     init {
         generateNewQuiz()
     }
@@ -81,6 +84,7 @@ class MainViewModel : ViewModel() {
         _symbolCount.value = (2..11).random() * 10
         _fanCount.value = (1..13).random()
         _isDraw.value = (0..1).random() == 1
+        _hasAnswer.value = false
     }
 
     fun callAnswerApi(
@@ -88,6 +92,7 @@ class MainViewModel : ViewModel() {
         payForStartPlayer: Int,
         payForOther: Int
     ) {
+        _hasAnswer.value = true
         val url = BuildConfig.API_ROOT + "/scores/answer"
         val requestQueue: RequestQueue = Volley.newRequestQueue(context)
 
@@ -235,6 +240,7 @@ fun WearApp(
     val symbolCount by mainViewModel.symbolCount.observeAsState(0)
     val fanCount by mainViewModel.fanCount.observeAsState(0)
     val isDraw by mainViewModel.isDraw.observeAsState(false)
+    val hasAnswer by mainViewModel.hasAnswer.observeAsState(false)
 
     MahjongQuizAppTheme {
         Box(
@@ -245,43 +251,58 @@ fun WearApp(
             Column{
                 TimeText()
             }
-            if (apiResponse == null) {
+            if (!hasAnswer) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.Bottom
                 ) {
                     Question(
-                            isParent,
-                            symbolCount,
-                            fanCount,
-                            isDraw,
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Button(
-                            modifier = Modifier.align(Alignment.CenterHorizontally).height(72.dp).width(72.dp),
-                            onClick = {
-                                if (speechRecognizerLauncher != null) {
-                                    displaySpeechRecognizer(speechRecognizerLauncher)
-                                }
-                            },
-                            content = {
-                                Text("答える")
-                            },
-                        )
+                        isParent,
+                        symbolCount,
+                        fanCount,
+                        isDraw,
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .height(64.dp)
+                            .width(64.dp),
+                        onClick = {
+                            if (speechRecognizerLauncher != null) {
+                                displaySpeechRecognizer(speechRecognizerLauncher)
+                            }
+                        },
+                        content = {
+                            Text("Answer")
+                        },
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             } else {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        color = if (apiResponse == true) MaterialTheme.colors.primary else MaterialTheme.colors.error,
-                        text = if (apiResponse == true) "正解！" else "不正解"
-                    )
+                    if (apiResponse != null) {
+                        Text(
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            color = if (apiResponse == true) MaterialTheme.colors.primary else MaterialTheme.colors.error,
+                            text = if (apiResponse == true) "Success！" else "False..."
+                        )
+                    }
+                    else {
+                        Text(
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            text = "Checking..."
+                        )
+                    }
                 }
             }
         }
