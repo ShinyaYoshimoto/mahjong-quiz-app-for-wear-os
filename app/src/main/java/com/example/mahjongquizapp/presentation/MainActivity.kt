@@ -82,9 +82,28 @@ class MainViewModel : ViewModel() {
     private fun generateNewQuiz() {
         _isParent.value = (0..1).random() == 1
         _symbolCount.value = (2..11).random() * 10
-        _fanCount.value = (1..13).random()
+        _fanCount.value = generateRandomFanCount()
         _isDraw.value = (0..1).random() == 1
         _hasAnswer.value = false
+    }
+
+    private fun generateRandomFanCount(): Int {
+        val lotteryNumber = (1..100).random()
+        return when (lotteryNumber) {
+            in 100..100 -> 13 // 1%
+            in 99..99 -> 12 // 1%
+            in 98..98 -> 11 // 1%
+            in 97..97 -> 10 // 1%
+            in 96..96 -> 9 // 1%
+            in 95..95 -> 8 // 1%
+            in 94..94 -> 7 // 1%
+            in 93..93 -> 6 // 1%
+            in 90..92 -> 5 // 2%
+            in 86..90 -> 4 // 5%
+            in 70..85 -> 3 // 15%
+            in 40..69 -> 2 // 30%
+            else -> 1 // 40%
+        }
     }
 
     fun callAnswerApi(
