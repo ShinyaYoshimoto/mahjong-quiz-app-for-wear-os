@@ -30,9 +30,11 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -417,6 +419,8 @@ fun WearApp(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center,
                         color = if (apiResponse == true) MaterialTheme.colors.primary else MaterialTheme.colors.error,
@@ -437,6 +441,8 @@ fun Question(
 ) {
     // とりあえず愚直に書いていく
     Text(
+        fontSize = 20.sp,
+        fontWeight = FontWeight.Bold,
         modifier = Modifier.fillMaxWidth(),
         textAlign = TextAlign.Center,
         color = MaterialTheme.colors.primary,
@@ -452,7 +458,7 @@ data class SelectableItem (
 
 
 
-@Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
+@Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true, apiLevel = 34)
 @Composable
 fun DefaultPreview() {
     val mainViewModel = MainViewModel()
