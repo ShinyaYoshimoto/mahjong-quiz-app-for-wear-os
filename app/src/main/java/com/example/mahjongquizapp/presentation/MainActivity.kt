@@ -24,12 +24,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,11 +40,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.material.Button
-import androidx.wear.compose.material.Chip
-import androidx.wear.compose.material.ChipDefaults
-import androidx.wear.compose.material.ListHeader
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
@@ -76,9 +72,6 @@ class MainViewModel : ViewModel() {
     private val _isDraw = MutableLiveData<Boolean>()
     val isDraw: LiveData<Boolean> = _isDraw
 
-    private val _selectableItems = MutableLiveData<Array<SelectableItem>>()
-    val selectableItems: LiveData<Array<SelectableItem>> = _selectableItems
-
     init {
         generateNewQuiz()
     }
@@ -88,7 +81,6 @@ class MainViewModel : ViewModel() {
         _symbolCount.value = (2..11).random() * 10
         _fanCount.value = (1..13).random()
         _isDraw.value = (0..1).random() == 1
-        _selectableItems.value = getSelectableItems(_isParent.value!!, _isDraw.value!!)
     }
 
     fun callAnswerApi(
@@ -136,113 +128,6 @@ class MainViewModel : ViewModel() {
         )
 
         requestQueue.add(jsonObjectRequest)
-    }
-
-    private fun getSelectableItems(
-        isParent: Boolean,
-        isDraw: Boolean
-    ): Array<SelectableItem> {
-        return if (isDraw) {
-            if (isParent) {
-                arrayOf(
-                    SelectableItem("500all", 0, 500),
-                    SelectableItem("700all", 0, 700),
-                    SelectableItem("800all", 0, 800),
-                    SelectableItem("1000all", 0, 1000),
-                    SelectableItem("1200all", 0, 1200),
-                    SelectableItem("1300all", 0, 1300),
-                    SelectableItem("1500all", 0, 1500),
-                    SelectableItem("1600all", 0, 1600),
-                    SelectableItem("1800all", 0, 1800),
-                    SelectableItem("2000all", 0, 2000),
-                    SelectableItem("2300all", 0, 2300),
-                    SelectableItem("2600all", 0, 2600),
-                    SelectableItem("2900all", 0, 2900),
-                    SelectableItem("3200all", 0, 3200),
-                    SelectableItem("3600all", 0, 3600),
-                    SelectableItem("3900all", 0, 3900),
-                    SelectableItem("4000all", 0, 4000),
-                    SelectableItem("6000all", 0, 6000),
-                    SelectableItem("8000all", 0, 8000),
-                    SelectableItem("12000all", 0, 12000),
-                    SelectableItem("16000all", 0, 16000)
-                )
-            } else {
-                arrayOf(
-                    SelectableItem("300, 500", 500, 300),
-                    SelectableItem("400, 700", 700, 400),
-                    SelectableItem("400, 800", 800, 400),
-                    SelectableItem("500, 1000", 1000, 500),
-                    SelectableItem("600, 1200", 1200, 600),
-                    SelectableItem("700, 1300", 1300, 700),
-                    SelectableItem("800, 1500", 1500, 800),
-                    SelectableItem("800, 1600", 1600, 800),
-                    SelectableItem("900, 1800", 1800, 900),
-                    SelectableItem("1000, 2000", 2000, 1000),
-                    SelectableItem("1200, 2300", 2300, 1200),
-                    SelectableItem("1300, 2600", 2600, 1300),
-                    SelectableItem("1500, 2900", 2900, 1500),
-                    SelectableItem("1600, 3200", 3200, 1600),
-                    SelectableItem("1800, 3600", 3600, 1800),
-                    SelectableItem("2000, 3900", 3900, 2000),
-                    SelectableItem("2000, 4000", 4000, 2000),
-                    SelectableItem("3000, 6000", 6000, 3000),
-                    SelectableItem("4000, 8000", 8000, 4000),
-                    SelectableItem("6000, 12000", 12000, 6000),
-                    SelectableItem("8000, 16000", 16000, 8000)
-                )
-            }
-        } else {
-            if (isParent) {
-                arrayOf(
-                    SelectableItem("1500", 0, 1500),
-                    SelectableItem("2000", 0, 2000),
-                    SelectableItem("2400", 0, 2400),
-                    SelectableItem("2900", 0, 2900),
-                    SelectableItem("3400", 0, 3400),
-                    SelectableItem("3900", 0, 3900),
-                    SelectableItem("4400", 0, 4400),
-                    SelectableItem("4800", 0, 4800),
-                    SelectableItem("5300", 0, 5300),
-                    SelectableItem("5800", 0, 5800),
-                    SelectableItem("6800", 0, 6800),
-                    SelectableItem("7200", 0, 7200),
-                    SelectableItem("8700", 0, 8700),
-                    SelectableItem("9600", 0, 9600),
-                    SelectableItem("10600", 0, 10600),
-                    SelectableItem("11600", 0, 11600),
-                    SelectableItem("12000", 0, 12000),
-                    SelectableItem("18000", 0, 18000),
-                    SelectableItem("24000", 0, 24000),
-                    SelectableItem("36000", 0, 36000),
-                    SelectableItem("48000", 0, 48000)
-                )
-            } else {
-                arrayOf(
-                    SelectableItem("1000", 1000, 1000),
-                    SelectableItem("1300", 1300, 1300),
-                    SelectableItem("1600", 1600, 1600),
-                    SelectableItem("2000", 2000, 2000),
-                    SelectableItem("2300", 2300, 2300),
-                    SelectableItem("2600", 2600, 2600),
-                    SelectableItem("2900", 2900, 2900),
-                    SelectableItem("3200", 3200, 3200),
-                    SelectableItem("3600", 3600, 3600),
-                    SelectableItem("3900", 3900, 3900),
-                    SelectableItem("4500", 4500, 4500),
-                    SelectableItem("5200", 5200, 5200),
-                    SelectableItem("5800", 5800, 5800),
-                    SelectableItem("6400", 6400, 6400),
-                    SelectableItem("7100", 7100, 7100),
-                    SelectableItem("7700", 7700, 7700),
-                    SelectableItem("8000", 8000, 8000),
-                    SelectableItem("12000", 12000, 12000),
-                    SelectableItem("16000", 16000, 16000),
-                    SelectableItem("24000", 24000, 24000),
-                    SelectableItem("32000", 32000, 32000)
-                )
-            }
-        }
     }
 }
 
@@ -300,10 +185,10 @@ class MainActivity : ComponentActivity() {
                     }
 
                 } else {
-                    Log.d("aaa", "入力値が不正です。再度入力してください。")
+                    Log.e("Bad Request", "入力値が不正です。再度入力してください。")
                 }
             } else {
-//                Toast.makeText(this, "音声認識に失敗しました", Toast.LENGTH_SHORT).show()
+                Log.e("Internal Error", "音声認識に失敗しました")
             }
         }
 
@@ -345,13 +230,11 @@ fun WearApp(
     mainViewModel: MainViewModel,
     speechRecognizerLauncher: ActivityResultLauncher<Intent>?
 ) {
-    val context = LocalContext.current
     val apiResponse by mainViewModel.apiResponse.observeAsState()
     val isParent by mainViewModel.isParent.observeAsState(false)
     val symbolCount by mainViewModel.symbolCount.observeAsState(0)
     val fanCount by mainViewModel.fanCount.observeAsState(0)
     val isDraw by mainViewModel.isDraw.observeAsState(false)
-    val selectableItems by mainViewModel.selectableItems.observeAsState(emptyArray())
 
     MahjongQuizAppTheme {
         Box(
@@ -367,8 +250,7 @@ fun WearApp(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center
                 ) {
-                    if (speechRecognizerLauncher !== null) {
-                        Question(
+                    Question(
                             isParent,
                             symbolCount,
                             fanCount,
@@ -376,42 +258,16 @@ fun WearApp(
                         )
                         Spacer(modifier = Modifier.height(24.dp))
                         Button(
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            modifier = Modifier.align(Alignment.CenterHorizontally).height(72.dp).width(72.dp),
                             onClick = {
-                                displaySpeechRecognizer(speechRecognizerLauncher)
+                                if (speechRecognizerLauncher != null) {
+                                    displaySpeechRecognizer(speechRecognizerLauncher)
+                                }
                             },
                             content = {
                                 Text("答える")
                             },
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                    } else {
-                        ScalingLazyColumn(modifier = Modifier.fillMaxWidth()) {
-                            item {
-                                ListHeader {
-                                    Question(
-                                        isParent,
-                                        symbolCount,
-                                        fanCount,
-                                        isDraw
-                                    )
-                                }
-                            }
-                            items(selectableItems.size) { index ->
-                                Chip(
-                                    onClick = {
-                                        mainViewModel.callAnswerApi(
-                                            context,
-                                            payForStartPlayer = selectableItems[index].payForStartPlayer,
-                                            payForOther = selectableItems[index].payForOther
-                                        )
-                                    },
-                                    label = { Text(selectableItems[index].label) },
-                                    colors = ChipDefaults.secondaryChipColors()
-                                )
-                            }
-                        }
-                    }
                 }
             } else {
                 Column(
@@ -449,14 +305,6 @@ fun Question(
         text = "${if (isParent) "親" else "子"} ${if (fanCount > 4) "" else "$symbolCount" + "符"}${fanCount}翻 ${if (isDraw) "ツモ" else "ロン"}"
     )
 }
-
-data class SelectableItem (
-    val label: String,
-    val payForStartPlayer: Int,
-    val payForOther: Int,
-)
-
-
 
 @Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true, apiLevel = 34)
 @Composable
